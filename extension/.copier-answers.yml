@@ -1,0 +1,13 @@
+# Changes here will be overwritten by Copier; NEVER EDIT MANUALLY
+_commit: v4.3.5
+_src_path: https://github.com/jupyterlab/extension-template
+author_email: mengyanw@umich.edu
+author_name: etc
+has_binder: false
+has_settings: false
+kind: server
+labextension_name: text2video
+project_short_description: A JupyterLab extension.
+python_name: text2video
+repository: ''
+test: true
