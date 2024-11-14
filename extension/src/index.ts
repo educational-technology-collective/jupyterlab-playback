@@ -13,7 +13,7 @@ const playBack = async (notebookPanel: NotebookPanel) => {
   const cells = notebookPanel.model?.cells
 
   if (cells) {
-    let currentAudio = -1
+    let currentAudio = null
     for (let i = 0; i < cells.length; i++) {
       let source = ''
       const cell: ICellModel = cells.get(i)
@@ -25,13 +25,14 @@ const playBack = async (notebookPanel: NotebookPanel) => {
         const text = cellMap[j]['text']
         for (const command of commands) {
           if (command.includes('AUDIO')) {
-            const audioIndex = cellMap[j]['audio_index']
-            if (audioIndex !== currentAudio) {
-              currentAudio = audioIndex
+            const audioSrc = cellMap[j]['audio_src']
+            console.log(audioSrc)
+            if (audioSrc !== currentAudio) {
+              currentAudio = audioSrc
               const response: any = await requestAPI('audio', {
                 method: 'POST',
                 body: JSON.stringify({
-                  audio_index: currentAudio
+                  audio_src: currentAudio
                 })
               })
             }

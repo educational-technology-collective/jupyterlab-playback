@@ -17,11 +17,18 @@ from pyht.client import TTSOptions, Language
 from dotenv import load_dotenv
 load_dotenv()
 
+import argparse
+parser = argparse.ArgumentParser(description="loader's command-line arguments.")
+parser.add_argument('directory', type=str, help="directory of the notebooks", nargs='?', default='/Users/mengyanw/University of Michigan Dropbox/Mengyan Wu/video/examples/example1/')
+args = parser.parse_args()
+directory = args.directory
+print(args)
+
 client = Client(
     user_id=os.getenv('user_id'),
     api_key=os.getenv('api_key'),
 )
-
+            
 def get_audio(
     # user: str,
     # key: str,
@@ -34,9 +41,8 @@ def get_audio(
         chunks: bytearray = bytearray()
         for chunk in data:
             chunks.extend(chunk)
-        with open(f"examples/audio/{fileIndex}.wav", "wb") as f:
+        with open(f"{directory}audio/{fileIndex}.wav", "w+b") as f:
             f.write(chunks)
-
 
     # Set the speech options
     options = TTSOptions(voice=voice, language=Language(language))
@@ -69,10 +75,9 @@ def get_audio(
     # print(str(metrics[-1].timers.get("time-to-first-audio")))
 
     # Cleanup.
-    return 0
+    return f"{directory}audio/{fileIndex}.wav" 
 
-
-with open('examples/stage1.ipynb', 'r') as file:
+with open(f'{directory}stage1.ipynb', 'r') as file:
     data = json.load(file)
     
 notebook_audiobase = []
@@ -119,13 +124,21 @@ for celli, cell in enumerate(data['cells']):
             audio_index += 1
     notebook_map.append(cell_map)
 
-# for i, base in enumerate(notebook_audiobase):
-#     print(base)   
-#     get_audio(
-#         [base],
-#         "s3://voice-cloning-zero-shot/d9ff78ba-d016-47f6-b0ef-dd630f59414e/female-cs/manifest.json",
-#         "english",
-#         i)
+audio_src_map = []
+for i, base in enumerate(notebook_audiobase):
+    print(base)
+    audio_src = get_audio(
+        [base],
+        "s3://voice-cloning-zero-shot/d9ff78ba-d016-47f6-b0ef-dd630f59414e/female-cs/manifest.json",
+        "english",
+        i)
+    audio_src_map.append(audio_src)
+
+for cell_map in notebook_map:
+    for line_map in cell_map:
+        print("line", line_map)
+        if line_map.get('audio_index') is not None:
+            line_map['audio_src'] = audio_src_map[line_map['audio_index']]
 
 print(notebook_audiobase)
 print(notebook_map)
@@ -135,9 +148,9 @@ for i, each in enumerate(notebook['cells']):
     each['source'] = []
     each['metadata']['map'] = notebook_map[i]
 
-with open('examples/stage2.ipynb', 'w') as f:
+with open(f'{directory}stage2.ipynb', 'w') as f:
     json.dump(notebook, f, indent=4)
 
 client.close()
 
-subprocess.Popen(["jupyter", "lab", "--notebook-dir", "examples"])
+subprocess.Popen(["jupyter", "lab", "--notebook-dir", directory]) 

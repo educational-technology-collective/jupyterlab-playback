@@ -33,12 +33,11 @@ class RouteHandler(ExtensionHandlerMixin, JupyterHandler):
         try:
             body = json.loads(self.request.body)
             if resource == "audio":
-                audio_index = body.get('audio_index')
-                filename = f'/Users/mengyanw/University of Michigan Dropbox/Mengyan Wu/video/examples/audio/{audio_index}.wav'
-                self.finish(json.dumps({
-                    "duration": librosa.get_duration(filename=filename)
-                }))
-                playsound(filename)
+                # audio_index = body.get('audio_index')
+                audio_src = body.get('audio_src') 
+                print(audio_src)
+                self.finish("Return before playing audio")
+                playsound(audio_src)
         except Exception as e:
             self.log.error(str(e))
             self.set_status(500)
