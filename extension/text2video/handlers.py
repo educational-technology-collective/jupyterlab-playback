@@ -38,7 +38,7 @@ class RouteHandler(ExtensionHandlerMixin, JupyterHandler):
                 self.finish(json.dumps({
                     "duration": librosa.get_duration(filename=filename)
                 }))
-                # playsound(filename)
+                playsound(filename)
         except Exception as e:
             self.log.error(str(e))
             self.set_status(500)

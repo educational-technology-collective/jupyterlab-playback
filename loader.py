@@ -85,9 +85,10 @@ for celli, cell in enumerate(data['cells']):
         audiobase = []
         for line in cell['source']:
             match = re.search(r'\[(.*?)\]', line)
+            print(match)
             commands = match.group(1) if match else None
             command_list = [x.strip() for x in commands.split(',')]
-            text =  line.replace(f"[{commands}]", "")            
+            text =  line.replace(f"[{commands}]", "")
             line_map = {
                 "command": command_list,
                 "text": text
@@ -101,7 +102,14 @@ for celli, cell in enumerate(data['cells']):
                 else:
                     print(f"bad syntax for AUDIO command: {line}")
                 line_map['audio_index'] = audio_index
-            elif 'AUDIO' not in command_list and audiobase != []:
+            elif 'AUDIOALT' in command_list:
+                alt_text = re.findall(r'\*\*(.*?)\*\*', text)[0]
+                line_map['text'] = text.replace(f"**{alt_text}**", "")
+                audiobase.append(alt_text)
+                line_map['audio_index'] = audio_index
+                print(alt_text)
+                print(line_map['text'])
+            elif 'AUDIO' not in command_list and 'AUDIOALT' not in command_list and audiobase != []:
                 notebook_audiobase.append(' '.join(audiobase))
                 audio_index += 1
                 audiobase = []

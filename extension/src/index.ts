@@ -42,7 +42,7 @@ const playBack = async (notebookPanel: NotebookPanel) => {
               source += char
               cell.sharedModel.setSource(source)
               await new Promise((resolve) => {
-                  setTimeout(resolve, 10);
+                  setTimeout(resolve, 50);
               });
             }  
           }
