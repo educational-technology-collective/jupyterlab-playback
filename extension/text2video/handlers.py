@@ -37,7 +37,7 @@ class RouteHandler(ExtensionHandlerMixin, JupyterHandler):
                 audio_src = body.get('audio_src') 
                 print(audio_src)
                 self.finish("Return before playing audio")
-                playsound(audio_src)
+                playsound(audio_src, False)
         except Exception as e:
             self.log.error(str(e))
             self.set_status(500)
