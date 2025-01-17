@@ -5,16 +5,18 @@ import {
 import {
   INotebookTracker,
   NotebookPanel,
-  CellList,
   NotebookActions
 } from '@jupyterlab/notebook';
-import { Cell, ICellModel } from '@jupyterlab/cells';
+import { ICellModel } from '@jupyterlab/cells';
 import { StateEffect } from '@codemirror/state';
 import { CodeMirrorEditor } from '@jupyterlab/codemirror';
-import { CodeEditor } from '@jupyterlab/codeeditor';
 import { Widget } from '@lumino/widgets';
 import { requestAPI } from './handler';
 import { highlightLinePlugin } from './cm';
+
+import { EditorState } from '@codemirror/state';
+import { lineNumbers } from '@codemirror/view';
+import { EditorView, basicSetup } from 'codemirror';
 
 const Status = Object.freeze({
   Play: 1,
@@ -99,35 +101,65 @@ const playBack = async (notebookPanel: NotebookPanel) => {
 const createMetadataEditor = (notebookPanel: NotebookPanel) => {
   const length = notebookPanel.model?.cells.length || 0;
   for (let j = 0; j < length; j++) {
-    const node = notebookPanel.content.widgets[j].node;
-    const cellInputWrapper = node.getElementsByClassName(
-      'jp-Cell-inputWrapper'
-    )[0];
-    const host = document.createElement('div');
-    host.classList.add('host', 'lm-widget');
-    // placeholder.style.background = 'beige'
-    host.style.width = '50%';
-    const map: Array<any> = notebookPanel.model?.cells
-      .get(j)
-      .getMetadata('map');
-    const len = map.length;
-    host.style.height = (18 * len).toString() + 'px';
+    const cell = notebookPanel.model?.cells.get(j);
+    if (cell) {
+      const node = notebookPanel.content.widgets[j].node;
+      const cellInputWrapper = node.getElementsByClassName(
+        'jp-Cell-inputWrapper'
+      )[0];
+      const metadataEditor = document.createElement('div');
+      metadataEditor.classList.add('metadata-editor');
+      metadataEditor.style.width = '50%';
 
-    for (let i = 0; i < len; i++) {
-      const line = document.createElement('input');
-      line.classList.add('line');
-      line.style.width = '100%';
-      // line.style.height = '18px'
-      // line.style.background = 'brown'
-      line.style.lineHeight = '13px';
-      line.style.fontSize = '13px';
-      line.style.border = 'none';
-      line.style.padding = '1.5px 5px 1.5px 5px';
-      // line.style.textAlign = 'center'
-      line.value = map[i]['command'].join(',');
-      host.appendChild(line);
+      const map2doc = (map: Array<any>) =>
+        map ? map.map(lineMap => lineMap['command'].join(',')).join('\n') : '';
+      const doc2map = (doc: string) =>
+        doc.split('\n').map(line => ({ command: line.split(',') }));
+
+      const state = EditorState.create({
+        doc: map2doc(cell.getMetadata('map')),
+        extensions: [
+          basicSetup,
+          lineNumbers(),
+          EditorView.updateListener.of(update => {
+            if (update.docChanged) {
+              cell.setMetadata('map', doc2map(update.state.doc.toString()));
+            }
+          })
+        ]
+      });
+
+      const view = new EditorView({
+        state,
+        parent: metadataEditor
+      });
+
+      function adjustLines(doc: string, numLines: number): string {
+        const lines = doc.split('\n');
+        while (lines.length < numLines) {
+          lines.push(''); // Add empty lines
+        }
+        while (lines.length > numLines) {
+          lines.pop(); // Remove extra lines
+        }
+        return lines.join('\n');
+      }
+
+      //   cell.contentChanged.connect(() => {
+      //     const currentText = view.state.doc.toString();
+      //     if (currentText !== cell.model.value.text) {
+      //         view.dispatch({
+      //             changes: {
+      //                 from: 0,
+      //                 to: currentText.length,
+      //                 insert: cell.model.value.text
+      //             }
+      //         });
+      //     }
+      // });
+
+      cellInputWrapper.appendChild(metadataEditor);
     }
-    cellInputWrapper.appendChild(host);
   }
 };
 
@@ -138,14 +170,6 @@ const plugin: JupyterFrontEndPlugin<void> = {
   requires: [INotebookTracker],
   activate: async (app: JupyterFrontEnd, notebookTracker: INotebookTracker) => {
     console.log('JupyterLab extension text2video is activated!');
-
-    const style = document.createElement('style');
-    style.textContent = `
-      .highlight-line {
-        background-color: yellow;
-      }
-    `;
-    document.head.appendChild(style);
 
     const playButton = document.createElement('button');
     playButton.innerText = 'Play';
@@ -159,7 +183,9 @@ const plugin: JupyterFrontEndPlugin<void> = {
         await notebookPanel.revealed;
         await notebookPanel.sessionContext.ready;
 
-        createMetadataEditor(notebookPanel);
+        const mode = notebookPanel.model?.getMetadata('mode');
+        if (!mode) notebookPanel.model?.setMetadata('mode', 'editor');
+        if (!mode || mode === 'editor') createMetadataEditor(notebookPanel);
 
         notebookPanel.toolbar.insertAfter(
           'spacer',
