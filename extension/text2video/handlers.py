@@ -8,6 +8,7 @@ import librosa
 from jupyter_server.base.handlers import JupyterHandler
 from jupyter_server.extension.handler import ExtensionHandlerMixin
 
+from .loader import loader
 
 class RouteHandler(ExtensionHandlerMixin, JupyterHandler):
     def __init__(self, *args, **kwargs):
@@ -38,6 +39,9 @@ class RouteHandler(ExtensionHandlerMixin, JupyterHandler):
                 print(audio_src)
                 self.finish("Return before playing audio")
                 playsound(audio_src, False)
+            if resource == "load":
+                data = body.get('data')
+                await loader(data=data)
         except Exception as e:
             self.log.error(str(e))
             self.set_status(500)

@@ -18,14 +18,6 @@ import { EditorState } from '@codemirror/state';
 import { lineNumbers } from '@codemirror/view';
 import { EditorView, basicSetup } from 'codemirror';
 
-const Status = Object.freeze({
-  Play: 1,
-  Pause: 2,
-  End: 3
-});
-
-let currentStatus: 1 | 2 | 3 = Status.Pause;
-
 const playBack = async (notebookPanel: NotebookPanel) => {
   const cells = notebookPanel.model?.cells;
 
@@ -34,7 +26,7 @@ const playBack = async (notebookPanel: NotebookPanel) => {
     for (let i = 0; i < cells.length; i++) {
       let source = '';
       const cell: ICellModel = cells.get(i);
-      const cellMap = cell.getMetadata('map');
+      const cellMap = cell.getMetadata('full_map');
       console.log(cellMap);
 
       for (let j = 0; j < cellMap?.length; j++) {
@@ -56,6 +48,7 @@ const playBack = async (notebookPanel: NotebookPanel) => {
           }
           if (command.includes('TYPE')) {
             const chunk = [...text];
+            chunk.push('\n');
             for (let char of chunk) {
               source += char;
               cell.sharedModel.setSource(source);
@@ -112,9 +105,9 @@ const createMetadataEditor = (notebookPanel: NotebookPanel) => {
       metadataEditor.style.width = '50%';
 
       const map2doc = (map: Array<any>) =>
-        map ? map.map(lineMap => lineMap['command'].join(',')).join('\n') : '';
+        map ? map.map(lineMap => lineMap['command'].join('+')).join('\n') : '';
       const doc2map = (doc: string) =>
-        doc.split('\n').map(line => ({ command: line.split(',') }));
+        doc.split('\n').map(line => ({ command: line.split('+') }));
 
       const state = EditorState.create({
         doc: map2doc(cell.getMetadata('map')),
@@ -171,35 +164,51 @@ const plugin: JupyterFrontEndPlugin<void> = {
   activate: async (app: JupyterFrontEnd, notebookTracker: INotebookTracker) => {
     console.log('JupyterLab extension text2video is activated!');
 
-    const playButton = document.createElement('button');
-    playButton.innerText = 'Play';
-    playButton.id = 'play-button';
-
-    const node = document.createElement('div');
-    node.appendChild(playButton);
-
     notebookTracker.widgetAdded.connect(
       async (_, notebookPanel: NotebookPanel) => {
         await notebookPanel.revealed;
         await notebookPanel.sessionContext.ready;
 
-        const mode = notebookPanel.model?.getMetadata('mode');
-        if (!mode) notebookPanel.model?.setMetadata('mode', 'editor');
-        if (!mode || mode === 'editor') createMetadataEditor(notebookPanel);
-
+        const button = document.createElement('button');
+        const node = document.createElement('div');
+        node.appendChild(button);
         notebookPanel.toolbar.insertAfter(
           'spacer',
-          'play-button',
+          'button',
           new Widget({ node: node })
         );
 
-        playButton.onclick = () => {
-          currentStatus =
-            currentStatus === Status.Play ? Status.Pause : Status.Play;
-          playButton.innerText =
-            playButton.innerText === 'Play' ? 'Pause' : 'Play';
-          if (currentStatus === Status.Play) playBack(notebookPanel);
-        };
+        const mode = notebookPanel.model?.getMetadata('mode');
+        if (!mode) notebookPanel.model?.setMetadata('mode', 'editor');
+        if (!mode || mode === 'editor') {
+          createMetadataEditor(notebookPanel);
+          button.innerText = 'Generate an interactive notebook';
+          button.onclick = async () => {
+            button.innerText = 'Generating notebook...';
+            const response: any = await requestAPI('load', {
+              method: 'POST',
+              body: JSON.stringify({
+                data: notebookPanel?.model?.toJSON()
+              })
+            });
+            console.log(response);
+            button.innerText = 'Regenerate interactive notebook';
+          };
+        } else if (mode === 'player') {
+          const Status = Object.freeze({
+            Play: 1,
+            Pause: 2,
+            End: 3
+          });
+          let currentStatus: 1 | 2 | 3 = Status.Pause;
+          button.innerText = 'Play';
+          button.onclick = () => {
+            currentStatus =
+              currentStatus === Status.Play ? Status.Pause : Status.Play;
+            button.innerText = button.innerText === 'Play' ? 'Pause' : 'Play';
+            if (currentStatus === Status.Play) playBack(notebookPanel);
+          };
+        }
       }
     );
   }
