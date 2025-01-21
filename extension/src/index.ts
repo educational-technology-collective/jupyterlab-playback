@@ -20,10 +20,14 @@ import { EditorView, basicSetup } from 'codemirror';
 
 const playBack = async (notebookPanel: NotebookPanel) => {
   const cells = notebookPanel.model?.cells;
+  const cellIndex = notebookPanel.model?.getMetadata('cellIndex') || 0;
+  const lineIndex = notebookPanel.model?.getMetadata('lineIndex') || 0;
+  const button = document.getElementById('extension-button');
 
   if (cells) {
+    if (button) button.innerHTML = '||';
     let currentAudio = null;
-    for (let i = 0; i < cells.length; i++) {
+    for (let i = cellIndex; i < cells.length; i++) {
       let source = '';
       const cell: ICellModel = cells.get(i);
       const cellMap = cell.getMetadata('full_map');
@@ -32,13 +36,28 @@ const playBack = async (notebookPanel: NotebookPanel) => {
       for (let j = 0; j < cellMap?.length; j++) {
         const commands = cellMap[j]['command'];
         const text = cellMap[j]['text'];
-        for (const command of commands) {
-          if (command.includes('AUDIO')) {
+        if (i === cellIndex && j < lineIndex) {
+          source += text;
+          source += '\n';
+          cell.sharedModel.setSource(source);
+        } else {
+          const isPlaying = notebookPanel.model.getMetadata('isPlaying');
+          if (!isPlaying) {
+            notebookPanel.model.setMetadata('cellIndex', i);
+            notebookPanel.model.setMetadata('lineIndex', j);
+            if (button) button.innerHTML = ' ▶ ';
+            const response: any = await requestAPI('stop', {
+              method: 'POST',
+              body: ''
+            });
+            return;
+          }
+          if (commands.some((command: string) => command.includes('AUDIO'))) {
             const audioSrc = cellMap[j]['audio_src'];
             console.log(audioSrc);
             if (audioSrc !== currentAudio) {
               currentAudio = audioSrc;
-              const response: any = await requestAPI('audio', {
+              await requestAPI('audio', {
                 method: 'POST',
                 body: JSON.stringify({
                   audio_src: currentAudio
@@ -46,49 +65,66 @@ const playBack = async (notebookPanel: NotebookPanel) => {
               });
             }
           }
-          if (command.includes('TYPE')) {
-            const chunk = [...text];
-            chunk.push('\n');
-            for (let char of chunk) {
-              source += char;
+          for (const command of commands) {
+            if (command.includes('TYPE')) {
+              const chunk = [...text];
+              chunk.push('\n');
+              for (let char of chunk) {
+                source += char;
+                cell.sharedModel.setSource(source);
+                await new Promise(resolve => {
+                  setTimeout(resolve, 50);
+                });
+
+                const isPlaying = notebookPanel.model.getMetadata('isPlaying');
+                if (!isPlaying) {
+                  notebookPanel.model.setMetadata('cellIndex', i);
+                  notebookPanel.model.setMetadata('lineIndex', j);
+                  if (button) button.innerHTML = ' ▶ ';
+                  const response: any = await requestAPI('stop', {
+                    method: 'POST'
+                  });
+                  return;
+                }
+              }
+            }
+            if (command.includes('PAUSE')) {
+              const time = command.replace(/\D/g, '');
+              source += '\n';
               cell.sharedModel.setSource(source);
               await new Promise(resolve => {
-                setTimeout(resolve, 50);
+                setTimeout(resolve, time);
               });
             }
-          }
-          if (command.includes('PAUSE')) {
-            const time = command.replace(/\D/g, '');
-            source += '\n';
-            cell.sharedModel.setSource(source);
-            await new Promise(resolve => {
-              setTimeout(resolve, time);
-            });
-          }
-          if (command.includes('SELECT')) {
-            console.log('***', command);
-            const lineToHighlight = command.replace(/\D/g, '');
-            const cm = notebookPanel.content.widgets[i]
-              ?.editor as CodeMirrorEditor;
-            const highlightPlugin = highlightLinePlugin(lineToHighlight);
+            if (command.includes('SELECT')) {
+              console.log('***', command);
+              const lineToHighlight = command.replace(/\D/g, '');
+              const cm = notebookPanel.content.widgets[i]
+                ?.editor as CodeMirrorEditor;
+              const highlightPlugin = highlightLinePlugin(lineToHighlight);
 
-            // Apply the highlight plugin to the existing instance
-            cm.editor.dispatch({
-              effects: StateEffect.appendConfig.of([highlightPlugin])
-            });
-          }
-          if (command.includes('EXECUTE')) {
-            console.log('***', 'EXECUTE');
-            NotebookActions.runCells(
-              notebookPanel.content,
-              [notebookPanel.content.widgets[i]],
-              notebookPanel.context.sessionContext
-            );
+              // Apply the highlight plugin to the existing instance
+              cm.editor.dispatch({
+                effects: StateEffect.appendConfig.of([highlightPlugin])
+              });
+            }
+            if (command.includes('EXECUTE')) {
+              console.log('***', 'EXECUTE');
+              NotebookActions.runCells(
+                notebookPanel.content,
+                [notebookPanel.content.widgets[i]],
+                notebookPanel.context.sessionContext
+              );
+            }
           }
         }
       }
     }
   }
+  if (button) button.innerHTML = ' ▶ '; // end of notebook or no cell available
+  notebookPanel.model?.setMetadata('cellIndex', '');
+  notebookPanel.model?.setMetadata('lineIndex', '');
+  notebookPanel.model?.setMetadata('isPlaying', false);
 };
 
 const createMetadataEditor = (notebookPanel: NotebookPanel) => {
@@ -170,6 +206,7 @@ const plugin: JupyterFrontEndPlugin<void> = {
         await notebookPanel.sessionContext.ready;
 
         const button = document.createElement('button');
+        button.id = 'extension-button';
         const node = document.createElement('div');
         node.appendChild(button);
         notebookPanel.toolbar.insertAfter(
@@ -182,9 +219,9 @@ const plugin: JupyterFrontEndPlugin<void> = {
         if (!mode) notebookPanel.model?.setMetadata('mode', 'editor');
         if (!mode || mode === 'editor') {
           createMetadataEditor(notebookPanel);
-          button.innerText = 'Generate an interactive notebook';
+          button.innerHTML = 'Generate an interactive notebook';
           button.onclick = async () => {
-            button.innerText = 'Generating notebook...';
+            button.innerHTML = 'Generating notebook...';
             const response: any = await requestAPI('load', {
               method: 'POST',
               body: JSON.stringify({
@@ -192,21 +229,17 @@ const plugin: JupyterFrontEndPlugin<void> = {
               })
             });
             console.log(response);
-            button.innerText = 'Regenerate interactive notebook';
+            button.innerHTML = 'Regenerate interactive notebook';
           };
         } else if (mode === 'player') {
-          const Status = Object.freeze({
-            Play: 1,
-            Pause: 2,
-            End: 3
-          });
-          let currentStatus: 1 | 2 | 3 = Status.Pause;
-          button.innerText = 'Play';
+          button.innerHTML = ' ▶ ';
+          notebookPanel.model?.setMetadata('isPlaying', false);
           button.onclick = () => {
-            currentStatus =
-              currentStatus === Status.Play ? Status.Pause : Status.Play;
-            button.innerText = button.innerText === 'Play' ? 'Pause' : 'Play';
-            if (currentStatus === Status.Play) playBack(notebookPanel);
+            const isPlaying =
+              notebookPanel.model?.getMetadata('isPlaying') || false;
+            notebookPanel.model?.setMetadata('isPlaying', !isPlaying);
+            button.innerHTML = "<span class='loader'></span>";
+            if (!isPlaying) playBack(notebookPanel);
           };
         }
       }

@@ -1,8 +1,7 @@
 import json
 import tornado
-from playsound import playsound
 import os
-import librosa
+import pygame
 # import boto3
 
 from jupyter_server.base.handlers import JupyterHandler
@@ -13,6 +12,7 @@ from .loader import loader
 class RouteHandler(ExtensionHandlerMixin, JupyterHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        pygame.init()
 
     @tornado.web.authenticated
     async def get(self, resource):
@@ -32,16 +32,23 @@ class RouteHandler(ExtensionHandlerMixin, JupyterHandler):
     @tornado.web.authenticated
     async def post(self, resource):
         try:
-            body = json.loads(self.request.body)
             if resource == "audio":
-                # audio_index = body.get('audio_index')
+                body = json.loads(self.request.body)
                 audio_src = body.get('audio_src') 
-                print(audio_src)
-                self.finish("Return before playing audio")
-                playsound(audio_src, False)
+                pygame.mixer.music.load(audio_src)
+                pygame.mixer.music.play()
             if resource == "load":
+                body = json.loads(self.request.body)
                 data = body.get('data')
                 await loader(data=data)
+            if resource == "stop":
+                pygame.mixer.music.stop()
+                pygame.mixer.music.unload()
+            # if resource == "pause":
+            #     # pos = pygame.mixer.music.get_pos()
+            #     pygame.mixer.music.pause()
+            # if resource == "unpause":
+            #     pygame.mixer.music.unpause()
         except Exception as e:
             self.log.error(str(e))
             self.set_status(500)
