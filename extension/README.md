@@ -8,6 +8,28 @@ This extension is composed of a Python package named `text2video`
 for the server extension and a NPM package named `text2video`
 for the frontend extension.
 
+## Command List
+### AUDIO  
+Generates audio from the text on the current line.
+
+### AUDIOALT  
+**Format:** `AUDIOALT|[text]`  
+Generates audio from the text provided after the command.
+
+### TYPE  
+Types the text on the current line.
+
+### PAUSE  
+**Format:** `PAUSE[number]`  
+Pauses playback for the specified number of milliseconds.
+
+### SELECT  
+**Format:** `SELECT[line number]`  
+Highlights the line specified by the given line number.
+
+### EXECUTE  
+Executes the current cell.
+
 ## Requirements
 
 - JupyterLab >= 4.0.0
