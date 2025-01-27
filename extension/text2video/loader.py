@@ -123,7 +123,7 @@ async def loader(data):
         print(base)
         audio_src = get_audio(
             [base],
-            "s3://voice-cloning-zero-shot/d9ff78ba-d016-47f6-b0ef-dd630f59414e/female-cs/manifest.json",
+            os.getenv('voice'),
             "english",
             i,
             client)
