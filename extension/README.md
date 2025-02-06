@@ -9,25 +9,32 @@ for the server extension and a NPM package named `text2video`
 for the frontend extension.
 
 ## Command List
-### AUDIO  
+
+### AUDIO
+
 Generates audio from the text on the current line.
 
-### AUDIOALT  
+### AUDIOALT
+
 **Format:** `AUDIOALT|[text]`  
 Generates audio from the text provided after the command.
 
-### TYPE  
+### TYPE
+
 Types the text on the current line.
 
-### PAUSE  
+### PAUSE
+
 **Format:** `PAUSE[number]`  
 Pauses playback for the specified number of milliseconds.
 
-### SELECT  
+### SELECT
+
 **Format:** `SELECT[line number]`  
 Highlights the line specified by the given line number.
 
-### EXECUTE  
+### EXECUTE
+
 Executes the current cell.
 
 ## Requirements

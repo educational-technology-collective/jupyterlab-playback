@@ -2,7 +2,6 @@ import json
 import tornado
 import os
 import pygame
-# import boto3
 
 from jupyter_server.base.handlers import JupyterHandler
 from jupyter_server.extension.handler import ExtensionHandlerMixin
@@ -53,18 +52,3 @@ class RouteHandler(ExtensionHandlerMixin, JupyterHandler):
             self.log.error(str(e))
             self.set_status(500)
             self.finish(json.dumps(str(e)))
-
-
-    #     BUCKET_NAME = 'telemetry-edtech-labs-si-umich-edu'
-    #     PREFIX = 'audio/audio/'
-    #     s3 = boto3.
-    # client(
-    #         's3',
-    #         aws_access_key_id=AWS_ACCESS_KEY,
-    #         aws_secret_access_key=AWS_SECRET_ACCESS_KEY
-    #     )
-    #     s3_object = s3.get_object(Bucket=BUCKET_NAME, Key='0.wav')
-
-        # playsound(s3_object)
-        # print('*************')
-        # print(os.getcwd()
