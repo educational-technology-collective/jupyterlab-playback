@@ -1,0 +1,15 @@
+{
+  "jupyter.lab.shortcuts": [],
+  "title": "text2video",
+  "description": "text2video settings.",
+  "type": "object",
+  "properties": {
+    "metadataEditorWidth": {
+      "type": "string",
+      "title": "Metadata Editor Width",
+      "description": "Please enter a value between 0 and 100",
+      "default": "50"
+    }
+  },
+  "additionalProperties": false
+}

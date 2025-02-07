@@ -3,6 +3,7 @@ import {
   JupyterFrontEndPlugin
 } from '@jupyterlab/application';
 import { INotebookTracker, NotebookPanel } from '@jupyterlab/notebook';
+import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { Widget } from '@lumino/widgets';
 import { requestAPI } from './handler';
 import { createMetadataEditor } from './cm';
@@ -12,9 +13,16 @@ const plugin: JupyterFrontEndPlugin<void> = {
   id: 'text2video:plugin',
   description: 'A JupyterLab extension.',
   autoStart: true,
-  requires: [INotebookTracker],
-  activate: async (app: JupyterFrontEnd, notebookTracker: INotebookTracker) => {
+  requires: [INotebookTracker, ISettingRegistry],
+  activate: async (
+    app: JupyterFrontEnd,
+    notebookTracker: INotebookTracker,
+    settingRegistry: ISettingRegistry
+  ) => {
     console.log('JupyterLab extension text2video is activated!');
+    const settings = await settingRegistry.load(plugin.id);
+    const metadataEditorWidth = settings.get('metadataEditorWidth')
+      .composite as number;
 
     notebookTracker.widgetAdded.connect(
       async (_, notebookPanel: NotebookPanel) => {
@@ -34,7 +42,7 @@ const plugin: JupyterFrontEndPlugin<void> = {
         const mode = notebookPanel.model?.getMetadata('mode');
         if (!mode) notebookPanel.model?.setMetadata('mode', 'editor');
         if (!mode || mode === 'editor') {
-          createMetadataEditor(notebookPanel);
+          createMetadataEditor(notebookPanel, metadataEditorWidth);
           button.innerHTML = 'Generate an interactive notebook';
           button.onclick = async () => {
             button.innerHTML = 'Generating notebook...';
@@ -54,7 +62,6 @@ const plugin: JupyterFrontEndPlugin<void> = {
             const isPlaying =
               notebookPanel.model?.getMetadata('isPlaying') || false;
             notebookPanel.model?.setMetadata('isPlaying', !isPlaying);
-            button.innerHTML = "<span class='loader'></span>";
             if (!isPlaying) playback(notebookPanel);
           };
         }

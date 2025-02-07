@@ -35,7 +35,10 @@ const source2template = (source: string) => {
   return { map, doc };
 };
 
-export const createMetadataEditor = (notebookPanel: NotebookPanel) => {
+export const createMetadataEditor = (
+  notebookPanel: NotebookPanel,
+  metadataEditorWidth: number
+) => {
   const length = notebookPanel.model?.cells.length || 0;
   for (let j = 0; j < length; j++) {
     const cell = notebookPanel.model?.cells.get(j);
@@ -44,18 +47,22 @@ export const createMetadataEditor = (notebookPanel: NotebookPanel) => {
       const cellInputWrapper = node.getElementsByClassName(
         'jp-Cell-inputWrapper'
       )[0];
+      const cellInputArea = cellInputWrapper.getElementsByClassName(
+        'jp-Cell-inputArea'
+      )[0] as HTMLElement;
+      cellInputArea.classList.add('code-editor');
+      cellInputArea.style.width = (100 - metadataEditorWidth).toString() + '%';
       const metadataEditor = document.createElement('div');
       metadataEditor.classList.add('metadata-editor');
-      metadataEditor.style.width = '50%';
+      metadataEditor.style.width = metadataEditorWidth.toString() + '%';
 
-      const initialState =
-        cell.getMetadata('map') ??
-        (() => {
-          const { map, doc } = source2template(cell.sharedModel.source);
-          console.log(map, doc);
-          cell.setMetadata('map', map);
-          return doc;
-        })();
+      const initialState = cell.getMetadata('map')
+        ? map2doc(cell.getMetadata('map'))
+        : (() => {
+            const { map, doc } = source2template(cell.sharedModel.source);
+            cell.setMetadata('map', map);
+            return doc;
+          })();
 
       const state = EditorState.create({
         doc: initialState,
@@ -70,34 +77,10 @@ export const createMetadataEditor = (notebookPanel: NotebookPanel) => {
         ]
       });
 
-      const view = new EditorView({
+      new EditorView({
         state,
         parent: metadataEditor
       });
-
-      // function adjustLines(doc: string, numLines: number): string {
-      //   const lines = doc.split('\n');
-      //   while (lines.length < numLines) {
-      //     lines.push(''); // Add empty lines
-      //   }
-      //   while (lines.length > numLines) {
-      //     lines.pop(); // Remove extra lines
-      //   }
-      //   return lines.join('\n');
-      // }
-
-      //   cell.contentChanged.connect(() => {
-      //     const currentText = view.state.doc.toString();
-      //     if (currentText !== cell.model.value.text) {
-      //         view.dispatch({
-      //             changes: {
-      //                 from: 0,
-      //                 to: currentText.length,
-      //                 insert: cell.model.value.text
-      //             }
-      //         });
-      //     }
-      // });
 
       cellInputWrapper.appendChild(metadataEditor);
     }

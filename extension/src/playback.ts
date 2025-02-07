@@ -12,7 +12,9 @@ export const playback = async (notebookPanel: NotebookPanel) => {
   const button = document.getElementById('extension-button');
 
   if (cells) {
-    if (button) button.innerHTML = '||';
+    if (button) {
+      button.innerHTML = '||';
+    }
     let currentAudio = null;
     for (let i = cellIndex; i < cells.length; i++) {
       let source = '';
@@ -32,7 +34,9 @@ export const playback = async (notebookPanel: NotebookPanel) => {
           if (!isPlaying) {
             notebookPanel.model.setMetadata('cellIndex', i);
             notebookPanel.model.setMetadata('lineIndex', j);
-            if (button) button.innerHTML = ' ▶ ';
+            if (button) {
+              button.innerHTML = ' ▶ ';
+            }
             const response: any = await requestAPI('stop', {
               method: 'POST',
               body: ''
