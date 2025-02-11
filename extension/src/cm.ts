@@ -35,18 +35,33 @@ const source2template = (source: string) => {
   return { map, doc };
 };
 
-export const createMetadataEditor = (
+// Fix errors caused by delayed loading of cells
+const getCellInputWrapper = (notebookPanel: NotebookPanel, index: number) =>
+  new Promise<HTMLElement>(resolve => {
+    const getElement = () => {
+      const node = notebookPanel.content.widgets[index].node;
+      const cellInputWrapper = node.getElementsByClassName(
+        'lm-Widget lm-Panel jp-Cell-inputWrapper'
+      )[0] as HTMLElement;
+      if (cellInputWrapper) {
+        resolve(cellInputWrapper);
+      } else {
+        requestAnimationFrame(getElement);
+      }
+    };
+    getElement();
+  });
+
+export const createMetadataEditor = async (
   notebookPanel: NotebookPanel,
   metadataEditorWidth: number
 ) => {
   const length = notebookPanel.model?.cells.length || 0;
   for (let j = 0; j < length; j++) {
     const cell = notebookPanel.model?.cells.get(j);
-    if (cell) {
-      const node = notebookPanel.content.widgets[j].node;
-      const cellInputWrapper = node.getElementsByClassName(
-        'jp-Cell-inputWrapper'
-      )[0];
+    if (cell && cell.type == 'code') {
+      await notebookPanel.content.widgets[j].ready;
+      const cellInputWrapper = await getCellInputWrapper(notebookPanel, j);
       const cellInputArea = cellInputWrapper.getElementsByClassName(
         'jp-Cell-inputArea'
       )[0] as HTMLElement;

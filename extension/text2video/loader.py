@@ -74,11 +74,10 @@ async def loader(data):
     audio_index = 0
         
     for celli, cell in enumerate(data['cells']):
-        # print("***", cell, type(cell))
-        source = cell['source'].split('\n')
-        base_map = cell['metadata']['map']
         cell_map = []
         if cell['cell_type'] == 'code':
+            source = cell['source'].split('\n')
+            base_map = cell['metadata']['map']
             audiobase = []
             for linei, line in enumerate(source):
                 command_list = base_map[linei]['command']
@@ -141,7 +140,8 @@ async def loader(data):
 
     notebook = data.copy()
     for i, each in enumerate(notebook['cells']):
-        each['source'] = []
+        if (each['cell_type'] == 'code'):
+            each['source'] = []
         each['metadata']['full_map'] = notebook_map[i]
     notebook['metadata']['mode'] = 'player'
     
