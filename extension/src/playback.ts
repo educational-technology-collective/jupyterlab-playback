@@ -5,6 +5,33 @@ import { CodeMirrorEditor } from '@jupyterlab/codemirror';
 import { requestAPI } from './handler';
 import { highlightLinePlugin } from './cm';
 
+const stop = async (
+  cellMap: any,
+  i: number,
+  j: number,
+  notebookPanel: NotebookPanel
+) => {
+  const button = document.getElementById('extension-button');
+  let jj = j;
+  if ('audio_index' in cellMap[j]) {
+    while (
+      jj > 0 &&
+      'audio_index' in cellMap[jj - 1] &&
+      cellMap[jj - 1]['audio_index'] === cellMap[jj]['audio_index']
+    ) {
+      jj -= 1;
+    }
+  }
+  notebookPanel?.model?.setMetadata('cellIndex', i);
+  notebookPanel?.model?.setMetadata('lineIndex', jj);
+  if (button) {
+    button.innerHTML = ' ▶ ';
+  }
+  const response: any = await requestAPI('stop', {
+    method: 'POST',
+    body: ''
+  });
+};
 export const playback = async (notebookPanel: NotebookPanel) => {
   const cells = notebookPanel.model?.cells;
   const cellIndex = notebookPanel.model?.getMetadata('cellIndex') || 0;
@@ -34,20 +61,11 @@ export const playback = async (notebookPanel: NotebookPanel) => {
           } else {
             const isPlaying = notebookPanel.model.getMetadata('isPlaying');
             if (!isPlaying) {
-              notebookPanel.model.setMetadata('cellIndex', i);
-              notebookPanel.model.setMetadata('lineIndex', j);
-              if (button) {
-                button.innerHTML = ' ▶ ';
-              }
-              const response: any = await requestAPI('stop', {
-                method: 'POST',
-                body: ''
-              });
+              await stop(cellMap, i, j, notebookPanel);
               return;
             }
             if (commands.some((command: string) => command.includes('AUDIO'))) {
               const audioSrc = cellMap[j]['audio_src'];
-              console.log(audioSrc);
               if (audioSrc !== currentAudio) {
                 currentAudio = audioSrc;
                 await requestAPI('audio', {
@@ -72,12 +90,7 @@ export const playback = async (notebookPanel: NotebookPanel) => {
                   const isPlaying =
                     notebookPanel.model.getMetadata('isPlaying');
                   if (!isPlaying) {
-                    notebookPanel.model.setMetadata('cellIndex', i);
-                    notebookPanel.model.setMetadata('lineIndex', j);
-                    if (button) button.innerHTML = ' ▶ ';
-                    const response: any = await requestAPI('stop', {
-                      method: 'POST'
-                    });
+                    await stop(cellMap, i, j, notebookPanel);
                     return;
                   }
                 }
@@ -91,7 +104,6 @@ export const playback = async (notebookPanel: NotebookPanel) => {
                 });
               }
               if (command.includes('SELECT')) {
-                console.log('***', command);
                 const lineToHighlight = command.replace(/\D/g, '');
                 const cm = notebookPanel.content.widgets[i]
                   ?.editor as CodeMirrorEditor;
@@ -103,7 +115,6 @@ export const playback = async (notebookPanel: NotebookPanel) => {
                 });
               }
               if (command.includes('EXECUTE')) {
-                console.log('***', 'EXECUTE');
                 NotebookActions.runCells(
                   notebookPanel.content,
                   [notebookPanel.content.widgets[i]],
