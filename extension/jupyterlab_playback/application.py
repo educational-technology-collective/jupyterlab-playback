@@ -2,7 +2,7 @@ from jupyter_server.extension.application import ExtensionApp
 from .handlers import RouteHandler
 
 class JupyterLabPlaybackApp(ExtensionApp):
-    name = "jupyterlab-playback"
+    name = "jupyterlab_playback"
     jobs = {}
 
     def initialize_handlers(self):

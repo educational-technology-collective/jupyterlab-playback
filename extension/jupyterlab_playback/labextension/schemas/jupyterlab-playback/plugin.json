@@ -1,0 +1,15 @@
+{
+  "jupyter.lab.shortcuts": [],
+  "title": "jupyterlab-playback",
+  "description": "jupyterlab-playback settings.",
+  "type": "object",
+  "properties": {
+    "metadataEditorWidth": {
+      "type": "string",
+      "title": "Metadata Editor Width",
+      "description": "Please enter a value between 0 and 100",
+      "default": "50"
+    }
+  },
+  "additionalProperties": false
+}

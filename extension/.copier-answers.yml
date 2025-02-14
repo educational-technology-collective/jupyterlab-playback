@@ -8,6 +8,6 @@ has_settings: false
 kind: server
 labextension_name: jupyterlab-playback
 project_short_description: A JupyterLab extension.
-python_name: jupyterlab-playback
-repository: ''
-test: true
+python_name: jupyterlab_playback
+repository: 'https://github.com/educational-technology-collective/jupyterlab-playback'
+test: false

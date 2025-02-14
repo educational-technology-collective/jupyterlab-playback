@@ -5,7 +5,7 @@ except ImportError:
     # in editable mode with pip. It is highly recommended to install
     # the package from a stable release or in editable mode: https://pip.pypa.io/en/stable/topics/local-project-installs/#editable-installs
     import warnings
-    warnings.warn("Importing 'jupyterlab-playback' outside a proper installation.")
+    warnings.warn("Importing 'jupyterlab_playback' outside a proper installation.")
     __version__ = "dev"
 
 from .application import JupyterLabPlaybackApp
@@ -19,7 +19,7 @@ def _jupyter_labextension_paths():
 
 def _jupyter_server_extension_points():
     return [{
-        "module": "jupyterlab-playback",
+        "module": "jupyterlab_playback",
         "app": JupyterLabPlaybackApp
     }]
 
