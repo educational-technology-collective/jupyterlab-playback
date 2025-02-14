@@ -1,11 +1,11 @@
-# text2video
+# jupyterlab-playback
 
 [![Github Actions Status](/workflows/Build/badge.svg)](/actions/workflows/build.yml)
 
 A JupyterLab extension.
 
-This extension is composed of a Python package named `text2video`
-for the server extension and a NPM package named `text2video`
+This extension is composed of a Python package named `jupyterlab-playback`
+for the server extension and a NPM package named `jupyterlab-playback`
 for the frontend extension.
 
 ## Command List
@@ -46,7 +46,7 @@ Executes the current cell.
 To install the extension, execute:
 
 ```bash
-pip install text2video
+pip install jupyterlab-playback
 ```
 
 ## Uninstall
@@ -54,7 +54,7 @@ pip install text2video
 To remove the extension, execute:
 
 ```bash
-pip uninstall text2video
+pip uninstall jupyterlab-playback
 ```
 
 ## Troubleshoot
@@ -85,13 +85,13 @@ The `jlpm` command is JupyterLab's pinned version of
 
 ```bash
 # Clone the repo to your local environment
-# Change directory to the text2video directory
+# Change directory to the jupyterlab-playback directory
 # Install package in development mode
 pip install -e ".[test]"
 # Link your development version of the extension with JupyterLab
 jupyter labextension develop . --overwrite
 # Server extension must be manually installed in develop mode
-jupyter server extension enable text2video
+jupyter server extension enable jupyterlab-playback
 # Rebuild extension Typescript source after making changes
 jlpm build
 ```
@@ -117,13 +117,13 @@ jupyter lab build --minimize=False
 
 ```bash
 # Server extension must be manually disabled in develop mode
-jupyter server extension disable text2video
-pip uninstall text2video
+jupyter server extension disable jupyterlab-playback
+pip uninstall jupyterlab-playback
 ```
 
 In development mode, you will also need to remove the symlink created by `jupyter labextension develop`
 command. To find its location, you can run `jupyter labextension list` to figure out where the `labextensions`
-folder is located. Then you can remove the symlink named `text2video` within that folder.
+folder is located. Then you can remove the symlink named `jupyterlab-playback` within that folder.
 
 ### Testing the extension
 
@@ -142,7 +142,7 @@ jupyter labextension develop . --overwrite
 To execute them, run:
 
 ```sh
-pytest -vv -r ap --cov text2video
+pytest -vv -r ap --cov jupyterlab-playback
 ```
 
 #### Frontend tests

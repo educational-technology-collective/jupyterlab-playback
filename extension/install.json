@@ -1,5 +1,5 @@
 {
   "packageManager": "python",
-  "packageName": "text2video",
-  "uninstallInstructions": "Use your Python package manager (pip, conda, etc.) to uninstall the package text2video"
+  "packageName": "jupyterlab-playback",
+  "uninstallInstructions": "Use your Python package manager (pip, conda, etc.) to uninstall the package jupyterlab-playback"
 }

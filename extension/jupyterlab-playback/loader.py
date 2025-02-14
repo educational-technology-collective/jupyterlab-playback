@@ -115,16 +115,17 @@ async def loader(data, relative_path):
                 audio_index += 1
         notebook_map.append(cell_map)
 
+    print(os.getenv('playht_user_id'), os.getenv('playht_api_key'), os.getenv('playht_voice_model'))
     client = Client(
-        user_id=os.getenv('user_id'),
-        api_key=os.getenv('api_key'),
+        user_id=os.getenv('playht_user_id'),
+        api_key=os.getenv('playht_api_key'),
     )
     audio_src_map = []
     for i, base in enumerate(notebook_audiobase):
         print(base)
         audio_src = get_audio(
             [base],
-            os.getenv('voice'),
+            os.getenv('playht_voice_model'),
             "english",
             i,
             client,

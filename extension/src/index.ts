@@ -10,7 +10,7 @@ import { createMetadataEditor } from './cm';
 import { playback } from './playback';
 
 const plugin: JupyterFrontEndPlugin<void> = {
-  id: 'text2video:plugin',
+  id: 'jupyterlab-playback:plugin',
   description: 'A JupyterLab extension.',
   autoStart: true,
   requires: [INotebookTracker, ISettingRegistry],
@@ -19,7 +19,7 @@ const plugin: JupyterFrontEndPlugin<void> = {
     notebookTracker: INotebookTracker,
     settingRegistry: ISettingRegistry
   ) => {
-    console.log('JupyterLab extension text2video is activated!');
+    console.log('JupyterLab extension jupyterlab-playback is activated!');
     const settings = await settingRegistry.load(plugin.id);
     const metadataEditorWidth = settings.get('metadataEditorWidth')
       .composite as number;

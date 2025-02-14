@@ -1,5 +1,5 @@
 {
-    "name": "text2video",
+    "name": "jupyterlab-playback",
     "version": "0.1.0",
     "description": "A JupyterLab extension.",
     "keywords": [
@@ -7,9 +7,9 @@
         "jupyterlab",
         "jupyterlab-extension"
     ],
-    "homepage": "",
+    "homepage": "https://github.com/educational-technology-collective/jupyterlab-playback",
     "bugs": {
-        "url": "/issues"
+        "url": "https://github.com/educational-technology-collective/jupyterlab-playback/issues"
     },
     "license": "BSD-3-Clause",
     "author": {
@@ -27,7 +27,7 @@
     "style": "style/index.css",
     "repository": {
         "type": "git",
-        "url": ".git"
+        "url": "https://github.com/educational-technology-collective/jupyterlab-playback.git"
     },
     "scripts": {
         "build": "jlpm build:lib && jlpm build:labextension:dev",
@@ -39,7 +39,7 @@
         "clean": "jlpm clean:lib",
         "clean:lib": "rimraf lib tsconfig.tsbuildinfo",
         "clean:lintcache": "rimraf .eslintcache .stylelintcache",
-        "clean:labextension": "rimraf text2video/labextension text2video/_version.py",
+        "clean:labextension": "rimraf jupyterlab-playback/labextension jupyterlab-playback/_version.py",
         "clean:all": "jlpm clean:lib && jlpm clean:labextension && jlpm clean:lintcache",
         "eslint": "jlpm eslint:check --fix",
         "eslint:check": "eslint . --cache --ext .ts,.tsx",
@@ -109,13 +109,13 @@
                     "pip"
                 ],
                 "base": {
-                    "name": "text2video"
+                    "name": "jupyterlab-playback"
                 }
             }
         },
         "extension": true,
         "schemaDir": "schema",
-        "outputDir": "text2video/labextension"
+        "outputDir": "jupyterlab-playback/labextension"
     },
     "eslintIgnore": [
         "node_modules",

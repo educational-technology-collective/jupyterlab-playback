@@ -1,7 +1,7 @@
 {
   "jupyter.lab.shortcuts": [],
-  "title": "text2video",
-  "description": "text2video settings.",
+  "title": "jupyterlab-playback",
+  "description": "jupyterlab-playback settings.",
   "type": "object",
   "properties": {
     "metadataEditorWidth": {

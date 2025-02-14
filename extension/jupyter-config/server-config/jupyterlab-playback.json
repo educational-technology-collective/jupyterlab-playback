@@ -1,7 +1,7 @@
 {
   "ServerApp": {
     "jpserver_extensions": {
-      "text2video": true
+      "jupyterlab-playback": true
     }
   }
 }
