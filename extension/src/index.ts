@@ -49,7 +49,8 @@ const plugin: JupyterFrontEndPlugin<void> = {
             const response: any = await requestAPI('load', {
               method: 'POST',
               body: JSON.stringify({
-                data: notebookPanel?.model?.toJSON()
+                data: notebookPanel?.model?.toJSON(),
+                relativePath: notebookTracker.currentWidget?.context.path
               })
             });
             console.log(response);

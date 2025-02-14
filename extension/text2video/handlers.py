@@ -19,8 +19,6 @@ class RouteHandler(ExtensionHandlerMixin, JupyterHandler):
             self.set_header("Content-Type", "application/json")
             if resource == "version":
                 self.finish(json.dumps(__version__))
-            elif resource == "id":
-                self.finish(json.dumps(os.getenv('WORKSPACE_ID')))
             else:
                 self.set_status(404)
         except Exception as e:
@@ -39,7 +37,8 @@ class RouteHandler(ExtensionHandlerMixin, JupyterHandler):
             if resource == "load":
                 body = json.loads(self.request.body)
                 data = body.get('data')
-                await loader(data=data)
+                relative_path = body.get('relativePath')
+                await loader(data=data, relative_path=relative_path)
             if resource == "stop":
                 pygame.mixer.music.stop()
                 pygame.mixer.music.unload()

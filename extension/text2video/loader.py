@@ -17,22 +17,23 @@ from pyht.client import TTSOptions, Language
 from dotenv import load_dotenv
 load_dotenv()
 
-directory = os.getcwd()
-            
 def get_audio(
     # user: str,
     # key: str,
     text: Iterable[str],
     voice: str,
     language: str,
-    fileIndex: int,
+    file_index: int,
     client: Client,
+    folder_path: str
 ):
+    os.makedirs(f"{folder_path}/audio", exist_ok=True)
+
     def save_audio(data: Generator[bytes, None, None] | Iterable[bytes]):
         chunks: bytearray = bytearray()
         for chunk in data:
             chunks.extend(chunk)
-        with open(f"{directory}/audio/{fileIndex}.wav", "w+b") as f:
+        with open(f"{folder_path}/audio/{file_index}.wav", "w+b") as f:
             f.write(chunks)
 
     # Set the speech options
@@ -66,9 +67,12 @@ def get_audio(
     # print(str(metrics[-1].timers.get("time-to-first-audio")))
 
     # Cleanup.
-    return f"{directory}/audio/{fileIndex}.wav"
+    return f"{folder_path}/audio/{file_index}.wav"
 
-async def loader(data):
+async def loader(data, relative_path):
+    filename = relative_path.split('/')[-1]
+    folder_path = '/'.join(relative_path.split('/')[:-1])
+
     notebook_audiobase = []
     notebook_map = []
     audio_index = 0
@@ -101,8 +105,6 @@ async def loader(data):
                     else:
                         audiobase.append(alt_text)
                     line_map['audio_index'] = audio_index
-                    # print(alt_text)
-                    # print(line_map['text'])
                 elif 'AUDIO' not in command_list and not any('AUDIOALT' in command for command in command_list) and audiobase != []:
                     notebook_audiobase.append(' '.join(audiobase))
                     audio_index += 1
@@ -125,7 +127,8 @@ async def loader(data):
             os.getenv('voice'),
             "english",
             i,
-            client)
+            client,
+            folder_path)
         audio_src_map.append(audio_src)
     client.close()
 
@@ -145,7 +148,7 @@ async def loader(data):
         each['metadata']['full_map'] = notebook_map[i]
     notebook['metadata']['mode'] = 'player'
     
-    with open(f'{directory}/player.ipynb', 'w') as f:
+    with open(f'{folder_path}/{filename[:-6]}_playback.ipynb', 'w') as f:
         json.dump(notebook, f, indent=4)
     
     return 'success'
