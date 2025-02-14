@@ -56,7 +56,7 @@ export const playback = async (notebookPanel: NotebookPanel) => {
           const text = cellMap[j]['text'];
           if (i === cellIndex && j < lineIndex) {
             source += text;
-            source += '\n';
+            if (j != cellMap?.length - 1) source += '\n';
             cell.sharedModel.setSource(source);
           } else {
             const isPlaying = notebookPanel.model.getMetadata('isPlaying');
@@ -79,7 +79,7 @@ export const playback = async (notebookPanel: NotebookPanel) => {
             for (const command of commands) {
               if (command.includes('TYPE')) {
                 const chunk = [...text];
-                chunk.push('\n');
+                if (j != cellMap?.length - 1) chunk.push('\n');
                 for (let char of chunk) {
                   source += char;
                   cell.sharedModel.setSource(source);
