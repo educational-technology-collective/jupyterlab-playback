@@ -23,7 +23,9 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
 ]
 dependencies = [
-    "jupyter_server>=2.0.1,<3"
+    "jupyter_server>=2.0.1,<3",
+    "pygame",
+    "pyht"
 ]
 dynamic = ["version", "description", "authors", "urls", "keywords"]
 

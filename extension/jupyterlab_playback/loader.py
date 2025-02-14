@@ -14,8 +14,8 @@ from pyht.async_client import AsyncClient
 from pyht import Client
 from pyht.client import TTSOptions, Language
 
-from dotenv import load_dotenv
-load_dotenv()
+# from dotenv import load_dotenv
+# load_dotenv()
 
 def get_audio(
     # user: str,
