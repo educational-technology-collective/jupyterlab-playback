@@ -9,5 +9,5 @@ class JupyterLabPlaybackApp(ExtensionApp):
         try:
             self.handlers.extend([(r"/jupyterlab-playback/(.*)", RouteHandler)])
         except Exception as e:
-            self.log.error(str(e))
+            self.log.error(str(e), exc_info=True)
             raise e

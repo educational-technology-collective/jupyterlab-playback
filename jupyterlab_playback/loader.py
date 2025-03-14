@@ -71,7 +71,7 @@ def get_audio(
 
 async def loader(data, relative_path):
     filename = relative_path.split('/')[-1]
-    folder_path = '/'.join(relative_path.split('/')[:-1])
+    folder_path = '/'.join(relative_path.split('/')[:-1]) or '.'
 
     notebook_audiobase = []
     notebook_map = []
