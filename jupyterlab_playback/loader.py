@@ -40,15 +40,7 @@ def get_audio(
     options = TTSOptions(voice=voice, language=Language(language))
 
     # Get the streams
-    # if use_http:
-    #     voice_engine = "Play3.0-mini-http"
-    # elif use_ws:
-    #     voice_engine = "Play3.0-mini-ws"
-    # else:
-    #     voice_engine = "PlayHT2.0"
-
-    voice_engine = "Play3.0-mini-http" 
-    in_stream, out_stream = client.get_stream_pair(options, voice_engine=voice_engine)
+    in_stream, out_stream = client.get_stream_pair(options, voice_engine='Play3.0-mini', protocol='http')
 
     # Start a player thread.
     audio_thread = threading.Thread(None, save_audio, args=(out_stream,))
