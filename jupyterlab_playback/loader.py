@@ -69,51 +69,11 @@ def get_audio(
     # Cleanup.
     return f"{folder_path}/audio/{file_index}.wav"
 
-async def loader(data, relative_path):
+async def loader(data, relative_path, notebook_audiobase, notebook_map):
     filename = relative_path.split('/')[-1]
     folder_path = '/'.join(relative_path.split('/')[:-1]) or '.'
 
-    notebook_audiobase = []
-    notebook_map = []
     audio_index = 0
-        
-    for celli, cell in enumerate(data['cells']):
-        cell_map = []
-        if cell['cell_type'] == 'code':
-            source = cell['source'].split('\n')
-            base_map = cell['metadata']['map']
-            audiobase = []
-            for linei, line in enumerate(source):
-                command_list = base_map[linei]['command']
-                line_map = {
-                    "command": command_list,
-                    "text": line
-                }
-                if 'AUDIO' in command_list:
-                    if line.startswith('#'):
-                        if line.endswith('\n'):
-                            audiobase.append(line[2:-1])
-                        else:
-                            audiobase.append(line[2:])
-                    else:
-                        print(f"Bad syntax for AUDIO command, line should start with #: {line}")
-                    line_map['audio_index'] = audio_index
-                elif any('AUDIOALT' in command for command in command_list):
-                    alt_text = [command.split('|')[-1] for command in command_list if 'AUDIOALT' in command][-1]
-                    if not alt_text or alt_text == 'AUDIOALT':
-                       print(f"Bad syntax for AUDIOALT command, the command should be followed by | <alt_text>: {command}")
-                    else:
-                        audiobase.append(alt_text)
-                    line_map['audio_index'] = audio_index
-                elif 'AUDIO' not in command_list and not any('AUDIOALT' in command for command in command_list) and audiobase != []:
-                    notebook_audiobase.append(' '.join(audiobase))
-                    audio_index += 1
-                    audiobase = []
-                cell_map.append(line_map)
-            if audiobase != []:
-                notebook_audiobase.append(' '.join(audiobase)) 
-                audio_index += 1
-        notebook_map.append(cell_map)
 
     print(os.getenv('playht_user_id'), os.getenv('playht_api_key'), os.getenv('playht_voice_model'))
     client = Client(

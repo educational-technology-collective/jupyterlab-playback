@@ -4,10 +4,12 @@ import {
 } from '@jupyterlab/application';
 import { INotebookTracker, NotebookPanel } from '@jupyterlab/notebook';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
+import { Dialog, showDialog } from '@jupyterlab/apputils';
 import { Widget } from '@lumino/widgets';
 import { requestAPI } from './handler';
 import { createMetadataEditor } from './cm';
 import { playback } from './playback';
+import { checkSyntax } from './syntax';
 
 const plugin: JupyterFrontEndPlugin<void> = {
   id: 'jupyterlab-playback:plugin',
@@ -45,15 +47,40 @@ const plugin: JupyterFrontEndPlugin<void> = {
           createMetadataEditor(notebookPanel, metadataEditorWidth);
           button.innerHTML = 'Generate an interactive notebook';
           button.onclick = async () => {
-            button.innerHTML = 'Generating notebook...';
-            const response: any = await requestAPI('load', {
-              method: 'POST',
-              body: JSON.stringify({
-                data: notebookPanel?.model?.toJSON(),
-                relativePath: notebookTracker.currentWidget?.context.path
-              })
-            });
-            console.log(response);
+            button.innerHTML = 'Checking syntax...';
+            const { isValid, message, nbaudiobase, nbmap } =
+              await checkSyntax(notebookPanel);
+            if (!isValid) {
+              showDialog({
+                body: message,
+                buttons: [
+                  Dialog.createButton({
+                    label: 'Dismiss',
+                    className: 'jp-Dialog-button jp-mod-reject jp-mod-styled'
+                  })
+                ]
+              });
+            } else {
+              button.innerHTML = 'Generating notebook...';
+              const response: any = await requestAPI('load', {
+                method: 'POST',
+                body: JSON.stringify({
+                  data: notebookPanel?.model?.toJSON(),
+                  relativePath: notebookTracker.currentWidget?.context.path,
+                  nbaudiobase,
+                  nbmap
+                })
+              });
+              showDialog({
+                body: response,
+                buttons: [
+                  Dialog.createButton({
+                    label: 'Dismiss',
+                    className: 'jp-Dialog-button jp-mod-reject jp-mod-styled'
+                  })
+                ]
+              });
+            }
             button.innerHTML = 'Regenerate interactive notebook';
           };
         } else if (mode === 'player') {
