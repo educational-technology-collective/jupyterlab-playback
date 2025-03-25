@@ -2,8 +2,8 @@ import { NotebookPanel } from '@jupyterlab/notebook';
 
 export const checkSyntax = async (notebookPanel: NotebookPanel) => {
   const messages: string[] = [];
-  const nbaudiobase = [];
-  const nbmap = [];
+  const nbAudioMap = [];
+  const nbMap = [];
   let audioIndex = 0;
   let isValid = true;
 
@@ -73,19 +73,27 @@ export const checkSyntax = async (notebookPanel: NotebookPanel) => {
             !commandList.some(command => command.includes('AUDIOALT')) &&
             audiobase.length > 0
           ) {
-            nbaudiobase.push(audiobase.join(' '));
+            nbAudioMap.push({
+              audiobase: audiobase.join(' '),
+              cellId: cell.id,
+              nbId: notebookPanel.id
+            });
             audioIndex++;
             audiobase = [];
           }
           cellMap.push(lineMap);
         });
         if (audiobase.length != 0) {
-          nbaudiobase.push(audiobase);
-          audioIndex += 1;
+          nbAudioMap.push({
+            audiobase: audiobase.join(' '),
+            cellId: cell.id,
+            nbId: notebookPanel.id
+          });
+          audioIndex++;
         }
       }
-      nbmap.push(cellMap);
+      nbMap.push(cellMap);
     }
   }
-  return { isValid, message: messages.join('\n'), nbaudiobase, nbmap };
+  return { isValid, message: messages.join('\n'), nbAudioMap, nbMap };
 };

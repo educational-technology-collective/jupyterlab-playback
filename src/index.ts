@@ -48,7 +48,7 @@ const plugin: JupyterFrontEndPlugin<void> = {
           button.innerHTML = 'Generate an interactive notebook';
           button.onclick = async () => {
             button.innerHTML = 'Checking syntax...';
-            const { isValid, message, nbaudiobase, nbmap } =
+            const { isValid, message, nbAudioMap, nbMap } =
               await checkSyntax(notebookPanel);
             if (!isValid) {
               showDialog({
@@ -67,8 +67,8 @@ const plugin: JupyterFrontEndPlugin<void> = {
                 body: JSON.stringify({
                   data: notebookPanel?.model?.toJSON(),
                   relativePath: notebookTracker.currentWidget?.context.path,
-                  nbaudiobase,
-                  nbmap
+                  nbAudioMap,
+                  nbMap
                 })
               });
               showDialog({

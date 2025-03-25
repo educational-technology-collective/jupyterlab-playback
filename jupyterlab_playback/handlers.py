@@ -38,9 +38,9 @@ class RouteHandler(ExtensionHandlerMixin, JupyterHandler):
                 body = json.loads(self.request.body)
                 data = body.get('data')
                 relative_path = body.get('relativePath')
-                nbaudiobase = body.get('nbaudiobase')
-                nbmap = body.get('nbmap')
-                await loader(data, relative_path, nbaudiobase, nbmap)
+                nb_audio_map = body.get('nbAudioMap')
+                nb_map = body.get('nbMap')
+                await loader(data, relative_path, nb_audio_map, nb_map)
                 self.finish("Interactive notebook generated successfully!")
             if resource == "stop":
                 pygame.mixer.music.stop()
