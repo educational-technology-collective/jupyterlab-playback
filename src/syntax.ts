@@ -89,8 +89,7 @@ export const checkSyntax = async (
           ) {
             nbAudioMap.push({
               audiobase: audiobase.join(' '),
-              cellId: cell.id,
-              nbId: notebookPanel.id
+              cellId: cell.getMetadata('id'),
             });
             audioIndex++;
             audiobase = [];
@@ -100,8 +99,7 @@ export const checkSyntax = async (
         if (audiobase.length != 0) {
           nbAudioMap.push({
             audiobase: audiobase.join(' '),
-            cellId: cell.id,
-            nbId: notebookPanel.id
+            cellId: cell.getMetadata('id'),
           });
           audioIndex++;
         }

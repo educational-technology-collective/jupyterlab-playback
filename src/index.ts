@@ -47,6 +47,13 @@ const plugin: JupyterFrontEndPlugin<void> = {
           new Widget({ node: node })
         );
 
+        if (notebookPanel.model?.cells) {
+          for (let i = 0; i < notebookPanel.model?.cells.length; i++) {
+            const cell = notebookPanel.model?.cells.get(i) 
+            if(!cell.getMetadata('id')) cell.setMetadata('id', cell.id) 
+          }
+        }
+
         const mode = notebookPanel.model?.getMetadata('mode');
         if (!mode) notebookPanel.model?.setMetadata('mode', 'editor');
         if (!mode || mode === 'editor') {

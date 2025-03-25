@@ -26,16 +26,15 @@ def get_audio(
     file_index: int,
     client: Client,
     folder_path: str,
-    cell_id: str,
-    nb_id: str
+    cell_id: str
 ):
-    os.makedirs(f"{folder_path}/.audio/{nb_id}/{cell_id}", exist_ok=True)
+    os.makedirs(f"{folder_path}/.audio/{cell_id}", exist_ok=True)
 
     def save_audio(data: Generator[bytes, None, None] | Iterable[bytes]):
         chunks: bytearray = bytearray()
         for chunk in data:
             chunks.extend(chunk)
-        with open(f"{folder_path}/.audio/{nb_id}/{cell_id}/{file_index}.wav", "w+b") as f:
+        with open(f"{folder_path}/.audio/{cell_id}/{file_index}.wav", "w+b") as f:
             f.write(chunks)
 
     # Set the speech options
@@ -61,7 +60,7 @@ def get_audio(
     # print(str(metrics[-1].timers.get("time-to-first-audio")))
 
     # Cleanup.
-    return f"{folder_path}/.audio/{nb_id}/{cell_id}/{file_index}.wav"
+    return f"{folder_path}/.audio/{cell_id}/{file_index}.wav"
 
 async def loader(data, relative_path, nb_audio_map, nb_map):
     filename = relative_path.split('/')[-1]
@@ -75,7 +74,7 @@ async def loader(data, relative_path, nb_audio_map, nb_map):
 
     audio_src_map = []
     for i, audio_map in enumerate(nb_audio_map):
-        base, cell_id, nb_id = audio_map["audiobase"], audio_map["cellId"], audio_map["nbId"]
+        base, cell_id = audio_map["audiobase"], audio_map["cellId"]
         print("Audiobase: ", base)
         audio_src = get_audio(
             [base],
@@ -84,8 +83,7 @@ async def loader(data, relative_path, nb_audio_map, nb_map):
             i,
             client,
             folder_path,
-            cell_id,
-            nb_id)
+            cell_id)
         audio_src_map.append(audio_src)
     client.close()
 
