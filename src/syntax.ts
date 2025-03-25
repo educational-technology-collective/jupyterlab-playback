@@ -1,6 +1,9 @@
 import { NotebookPanel } from '@jupyterlab/notebook';
 
-export const checkSyntax = async (notebookPanel: NotebookPanel) => {
+export const checkSyntax = async (
+  notebookPanel: NotebookPanel,
+  includeMarkdown: boolean
+) => {
   const messages: string[] = [];
   const nbAudioMap = [];
   const nbMap = [];
@@ -12,7 +15,7 @@ export const checkSyntax = async (notebookPanel: NotebookPanel) => {
     for (let celli = 0; celli < cells?.length; celli++) {
       const cellMap: any = [];
       const cell = cells.get(celli);
-      if (cell.type === 'code') {
+      if (cell) {
         const source = cell.sharedModel.source.split('\n');
         const baseMap = cell.getMetadata('map');
         console.log(source, baseMap);
@@ -21,17 +24,11 @@ export const checkSyntax = async (notebookPanel: NotebookPanel) => {
           messages.push(
             `[Warning] <Cell ${celli}>: Line mismatch between code and metadata editors. Review before proceeding, or blank lines will be added for consistency.`
           );
-
-          if (source.length > baseMap.length) {
-            while (source.length > baseMap.length) {
-              baseMap.push({ command: [] });
-            }
+          while (source.length > baseMap.length) {
+            baseMap.push({ command: [] });
           }
-
-          if (source.length < baseMap.length) {
-            while (source.length < baseMap.length) {
-              source.push('');
-            }
+          while (source.length < baseMap.length) {
+            source.push('');
           }
         }
 
@@ -42,14 +39,31 @@ export const checkSyntax = async (notebookPanel: NotebookPanel) => {
             command: commandList,
             text: line
           };
+          if (cell.type === 'markdown' && commandList.includes('TYPE')) {
+            const err = `[Error] <Cell ${celli}, Line ${linei} >: TYPE command is not available for markdown cells`;
+            isValid = false;
+            console.error(err);
+            messages.push(err);
+          }
           if (commandList.includes('AUDIO')) {
-            if (line.startsWith('#')) {
-              audiobase.push(line.slice(2).trim());
-            } else {
-              const err = `[Error] <Cell ${celli}, Line ${linei} >: Bad syntax for AUDIO command, line should start with #`;
-              isValid = false;
-              console.error(err);
-              messages.push(err);
+            if (cell.type === 'code') {
+              if (line.startsWith('#')) {
+                audiobase.push(line.slice(2).trim());
+              } else {
+                const err = `[Error] <Cell ${celli}, Line ${linei} >: Bad syntax for AUDIO command in code cells, code line should start with #`;
+                isValid = false;
+                console.error(err);
+                messages.push(err);
+              }
+            } else if (includeMarkdown && cell.type === 'markdown') {
+              if (line.startsWith('#')) {
+                const err = `[Error] <Cell ${celli}, Line ${linei} >: Bad syntax for AUDIO command in markdown cells, AUDIO command is not available for markdown headers`;
+                isValid = false;
+                console.error(err);
+                messages.push(err);
+              } else {
+                audiobase.push(line.trim());
+              }
             }
             lineMap['audio_index'] = audioIndex;
           } else if (

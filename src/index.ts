@@ -10,6 +10,7 @@ import { requestAPI } from './handler';
 import { createMetadataEditor } from './cm';
 import { playback } from './playback';
 import { checkSyntax } from './syntax';
+import { MarkdownCell } from '@jupyterlab/cells';
 
 const plugin: JupyterFrontEndPlugin<void> = {
   id: 'jupyterlab-playback:plugin',
@@ -25,11 +26,16 @@ const plugin: JupyterFrontEndPlugin<void> = {
     const settings = await settingRegistry.load(plugin.id);
     const metadataEditorWidth = settings.get('metadataEditorWidth')
       .composite as number;
+    const includeMarkdown = settings.get('includeMarkdown')
+      .composite as boolean;
 
     notebookTracker.widgetAdded.connect(
       async (_, notebookPanel: NotebookPanel) => {
         await notebookPanel.revealed;
         await notebookPanel.sessionContext.ready;
+
+        // const firstCell = notebookPanel.content.widgets[0] as MarkdownCell
+        // firstCell.renderedChanged.connect(() => console.log('******', firstCell.rendered))
 
         const button = document.createElement('button');
         button.id = 'extension-button';
@@ -44,12 +50,18 @@ const plugin: JupyterFrontEndPlugin<void> = {
         const mode = notebookPanel.model?.getMetadata('mode');
         if (!mode) notebookPanel.model?.setMetadata('mode', 'editor');
         if (!mode || mode === 'editor') {
-          createMetadataEditor(notebookPanel, metadataEditorWidth);
+          createMetadataEditor(
+            notebookPanel,
+            metadataEditorWidth,
+            includeMarkdown
+          );
           button.innerHTML = 'Generate an interactive notebook';
           button.onclick = async () => {
             button.innerHTML = 'Checking syntax...';
-            const { isValid, message, nbAudioMap, nbMap } =
-              await checkSyntax(notebookPanel);
+            const { isValid, message, nbAudioMap, nbMap } = await checkSyntax(
+              notebookPanel,
+              includeMarkdown
+            );
             if (!isValid) {
               showDialog({
                 body: message,
@@ -90,7 +102,7 @@ const plugin: JupyterFrontEndPlugin<void> = {
             const isPlaying =
               notebookPanel.model?.getMetadata('isPlaying') || false;
             notebookPanel.model?.setMetadata('isPlaying', !isPlaying);
-            if (!isPlaying) playback(notebookPanel);
+            if (!isPlaying) playback(notebookPanel, includeMarkdown);
           };
         }
       }

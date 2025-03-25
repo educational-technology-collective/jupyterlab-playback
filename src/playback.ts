@@ -32,7 +32,10 @@ const stop = async (
     body: ''
   });
 };
-export const playback = async (notebookPanel: NotebookPanel) => {
+export const playback = async (
+  notebookPanel: NotebookPanel,
+  includeMarkdown: boolean
+) => {
   const cells = notebookPanel.model?.cells;
   const cellIndex = notebookPanel.model?.getMetadata('cellIndex') || 0;
   const lineIndex = notebookPanel.model?.getMetadata('lineIndex') || 0;
@@ -48,16 +51,22 @@ export const playback = async (notebookPanel: NotebookPanel) => {
     for (let i = cellIndex; i < cells.length; i++) {
       let source = '';
       const cell: ICellModel = cells.get(i);
-      if (cell.type === 'code') {
+      if (
+        cell.type === 'code' ||
+        (includeMarkdown && cell.type === 'markdown')
+      ) {
         const cellMap = cell.getMetadata('full_map');
 
         for (let j = 0; j < cellMap?.length; j++) {
-          const commands = cellMap[j]['command'];
+          const commands: Array<string> = cellMap[j]['command'];
           const text = cellMap[j]['text'];
           if (i === cellIndex && j < lineIndex) {
-            source += text;
-            if (j != cellMap?.length - 1) source += '\n';
-            cell.sharedModel.setSource(source);
+            if (cell.type === 'code') {
+              source += text;
+              if (j != cellMap?.length - 1) source += '\n';
+              cell.sharedModel.setSource(source);
+            }
+            // else if (cell.type === 'markdown') continue
           } else {
             const isPlaying = notebookPanel.model.getMetadata('isPlaying');
             if (!isPlaying) {
@@ -68,16 +77,29 @@ export const playback = async (notebookPanel: NotebookPanel) => {
               const audioSrc = cellMap[j]['audio_src'];
               if (audioSrc !== currentAudio) {
                 currentAudio = audioSrc;
-                await requestAPI('audio', {
+                const response = await requestAPI('audio', {
                   method: 'POST',
                   body: JSON.stringify({
                     audio_src: currentAudio
                   })
                 });
+                console.log(response);
+              }
+            }
+            if (cell.type === 'markdown') {
+              for (let k = 0; k < [...text].length; k++) {
+                await new Promise(resolve => {
+                  setTimeout(resolve, 50);
+                });
+                const isPlaying = notebookPanel.model.getMetadata('isPlaying');
+                if (!isPlaying) {
+                  await stop(cellMap, i, j, notebookPanel);
+                  return;
+                }
               }
             }
             for (const command of commands) {
-              if (command.includes('TYPE')) {
+              if (command.startsWith('TYPE')) {
                 const chunk = [...text];
                 if (j != cellMap?.length - 1) chunk.push('\n');
                 for (let char of chunk) {
@@ -95,16 +117,18 @@ export const playback = async (notebookPanel: NotebookPanel) => {
                   }
                 }
               }
-              if (command.includes('PAUSE')) {
-                const time = command.replace(/\D/g, '');
-                source += '\n';
-                cell.sharedModel.setSource(source);
+              if (command.startsWith('PAUSE')) {
+                const time = parseInt(command.replace(/\D/g, ''));
+                if (cell.type === 'code') {
+                  source += '\n';
+                  cell.sharedModel.setSource(source);
+                }
                 await new Promise(resolve => {
                   setTimeout(resolve, time);
                 });
               }
-              if (command.includes('SELECT')) {
-                const lineToHighlight = command.replace(/\D/g, '');
+              if (command.startsWith('SELECT')) {
+                const lineToHighlight = parseInt(command.replace(/\D/g, ''));
                 const cm = notebookPanel.content.widgets[i]
                   ?.editor as CodeMirrorEditor;
                 const highlightPlugin = highlightLinePlugin(lineToHighlight);
@@ -114,7 +138,7 @@ export const playback = async (notebookPanel: NotebookPanel) => {
                   effects: StateEffect.appendConfig.of([highlightPlugin])
                 });
               }
-              if (command.includes('EXECUTE')) {
+              if (command.startsWith('EXECUTE')) {
                 NotebookActions.runCells(
                   notebookPanel.content,
                   [notebookPanel.content.widgets[i]],

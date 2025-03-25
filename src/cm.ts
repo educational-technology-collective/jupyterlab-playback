@@ -15,20 +15,35 @@ const map2doc = (map: Array<any>) =>
 const doc2map = (doc: string) =>
   doc.split('\n').map(line => ({ command: line.split('+') }));
 
-const source2template = (source: string) => {
+const source2template = (source: string, cellType: string) => {
   const sourceLines = source.split('\n');
   const sourceLength = sourceLines.length || 0;
   const map = [];
-  for (let i = 0; i < sourceLength; i++) {
-    const sourceLine = sourceLines[i];
-    if (/^\s*#/.test(sourceLine)) {
-      // lines starting with '#' or ' #'
-      map.push({ command: ['TYPE', 'AUDIO'] });
-    } else if (/^\s*$/.test(sourceLine)) {
-      // empty or contain only spaces
-      map.push({ command: ['PAUSE500'] });
-    } else {
-      map.push({ command: ['TYPE'] });
+  if (cellType === 'code') {
+    for (let i = 0; i < sourceLength; i++) {
+      const sourceLine = sourceLines[i];
+      if (/^\s*#/.test(sourceLine)) {
+        // lines starting with '#' or ' #'
+        map.push({ command: ['TYPE', 'AUDIO'] });
+      } else if (/^\s*$/.test(sourceLine)) {
+        // empty or contain only spaces
+        map.push({ command: ['PAUSE500'] });
+      } else {
+        map.push({ command: ['TYPE'] });
+      }
+    }
+  } else if (cellType === 'markdown') {
+    for (let i = 0; i < sourceLength; i++) {
+      const sourceLine = sourceLines[i];
+      if (/^\s*#/.test(sourceLine)) {
+        // lines starting with '#' or ' #'
+        map.push({ command: [] });
+      } else if (/^\s*$/.test(sourceLine) || /^\s*!/.test(sourceLine)) {
+        // empty or contain only spaces or lines starting with '!'
+        map.push({ command: ['PAUSE500'] });
+      } else {
+        map.push({ command: ['AUDIO'] });
+      }
     }
   }
   const doc = map2doc(map);
@@ -54,12 +69,16 @@ const getCellInputWrapper = (notebookPanel: NotebookPanel, index: number) =>
 
 export const createMetadataEditor = async (
   notebookPanel: NotebookPanel,
-  metadataEditorWidth: number
+  metadataEditorWidth: number,
+  includeMarkdown: boolean
 ) => {
   const length = notebookPanel.model?.cells.length || 0;
   for (let j = 0; j < length; j++) {
     const cell = notebookPanel.model?.cells.get(j);
-    if (cell && cell.type == 'code') {
+    if (
+      cell &&
+      (cell.type === 'code' || (includeMarkdown && cell.type === 'markdown'))
+    ) {
       await notebookPanel.content.widgets[j].ready;
       const cellInputWrapper = await getCellInputWrapper(notebookPanel, j);
       const cellInputArea = cellInputWrapper.getElementsByClassName(
@@ -74,7 +93,10 @@ export const createMetadataEditor = async (
       const initialState = cell.getMetadata('map')
         ? map2doc(cell.getMetadata('map'))
         : (() => {
-            const { map, doc } = source2template(cell.sharedModel.source);
+            const { map, doc } = source2template(
+              cell.sharedModel.source,
+              cell.type
+            );
             cell.setMetadata('map', map);
             return doc;
           })();
