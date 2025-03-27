@@ -31,6 +31,7 @@ const stop = async (
     method: 'POST',
     body: ''
   });
+  console.log(response);
 };
 export const playback = async (
   notebookPanel: NotebookPanel,
@@ -63,7 +64,9 @@ export const playback = async (
           if (i === cellIndex && j < lineIndex) {
             if (cell.type === 'code') {
               source += text;
-              if (j != cellMap?.length - 1) source += '\n';
+              if (j !== cellMap?.length - 1) {
+                source += '\n';
+              }
               cell.sharedModel.setSource(source);
             }
             // else if (cell.type === 'markdown') continue
@@ -101,8 +104,10 @@ export const playback = async (
             for (const command of commands) {
               if (command.startsWith('TYPE')) {
                 const chunk = [...text];
-                if (j != cellMap?.length - 1) chunk.push('\n');
-                for (let char of chunk) {
+                if (j !== cellMap?.length - 1) {
+                  chunk.push('\n');
+                }
+                for (const char of chunk) {
                   source += char;
                   cell.sharedModel.setSource(source);
                   await new Promise(resolve => {
@@ -151,7 +156,9 @@ export const playback = async (
       }
     }
   }
-  if (button) button.innerHTML = ' ▶ '; // end of notebook or no cell available
+  if (button) {
+    button.innerHTML = ' ▶ '; // end of notebook or no cell available
+  }
   notebookPanel.model?.setMetadata('cellIndex', '');
   notebookPanel.model?.setMetadata('lineIndex', '');
   notebookPanel.model?.setMetadata('isPlaying', false);

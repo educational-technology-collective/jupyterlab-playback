@@ -10,7 +10,6 @@ import { requestAPI } from './handler';
 import { createMetadataEditor } from './cm';
 import { playback } from './playback';
 import { checkSyntax } from './syntax';
-import { MarkdownCell } from '@jupyterlab/cells';
 
 const plugin: JupyterFrontEndPlugin<void> = {
   id: 'jupyterlab-playback:plugin',
@@ -49,13 +48,17 @@ const plugin: JupyterFrontEndPlugin<void> = {
 
         if (notebookPanel.model?.cells) {
           for (let i = 0; i < notebookPanel.model?.cells.length; i++) {
-            const cell = notebookPanel.model?.cells.get(i) 
-            if(!cell.getMetadata('id')) cell.setMetadata('id', cell.id) 
+            const cell = notebookPanel.model?.cells.get(i);
+            if (!cell.getMetadata('id')) {
+              cell.setMetadata('id', cell.id);
+            }
           }
         }
 
         const mode = notebookPanel.model?.getMetadata('mode');
-        if (!mode) notebookPanel.model?.setMetadata('mode', 'editor');
+        if (!mode) {
+          notebookPanel.model?.setMetadata('mode', 'editor');
+        }
         if (!mode || mode === 'editor') {
           createMetadataEditor(
             notebookPanel,
@@ -109,7 +112,9 @@ const plugin: JupyterFrontEndPlugin<void> = {
             const isPlaying =
               notebookPanel.model?.getMetadata('isPlaying') || false;
             notebookPanel.model?.setMetadata('isPlaying', !isPlaying);
-            if (!isPlaying) playback(notebookPanel, includeMarkdown);
+            if (!isPlaying) {
+              playback(notebookPanel, includeMarkdown);
+            }
           };
         }
       }

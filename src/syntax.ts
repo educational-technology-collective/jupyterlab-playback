@@ -89,17 +89,17 @@ export const checkSyntax = async (
           ) {
             nbAudioMap.push({
               audiobase: audiobase.join(' '),
-              cellId: cell.getMetadata('id'),
+              cellId: cell.getMetadata('id')
             });
             audioIndex++;
             audiobase = [];
           }
           cellMap.push(lineMap);
         });
-        if (audiobase.length != 0) {
+        if (audiobase.length !== 0) {
           nbAudioMap.push({
             audiobase: audiobase.join(' '),
-            cellId: cell.getMetadata('id'),
+            cellId: cell.getMetadata('id')
           });
           audioIndex++;
         }
