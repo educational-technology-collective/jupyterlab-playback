@@ -1,10 +1,14 @@
 # jupyterlab-playback
 
-A JupyterLab extension.
+A JupyterLab extension that utilizes AI voice generator to make educational notebooks interactive and playable.
 
 This extension is composed of a Python package named `jupyterlab-playback`
 for the server extension and a NPM package named `jupyterlab-playback`
 for the frontend extension.
+
+![demo](demo/demo.gif)
+
+🔊 [Click here to watch the full demo with audio](demo/demo_full.mp4)
 
 ## Command List
 
